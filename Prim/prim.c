@@ -1,7 +1,7 @@
 /**
  * @file prim.c
  * @author Jorge Ricarte (jorgericartepg@gmail.com)
- * @brief 
+ * @brief This code is an implementation of Prim's algorithm to find the Minimum Spanning Tree (MST) of a weighted graph.
  * @version 0.1
  * @date 2023-10-16
  * 
