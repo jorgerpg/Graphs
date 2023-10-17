@@ -6,32 +6,27 @@
  * @date 2023-10-16
  * @copyright Copyright (c) 2023
  */
-
 #include <stdio.h>
 #include <stdlib.h>
 
-// Define a structure to represent a node in the adjacency list
 typedef struct AdjListNode
 {
-	int dest;									// Destination vertex
-	struct AdjListNode *next; // Pointer to the next adjacent node
+	int dest;
+	struct AdjListNode *next;
 } AdjListNode;
 
-// Define a structure to represent an adjacency list
 typedef struct AdjList
 {
-	AdjListNode *head; // Pointer to the first adjacent node in the list
+	AdjListNode *head;
 } AdjList;
 
-// Define a structure to represent a graph
 typedef struct Graph
 {
-	int V;					// Number of vertices in the graph
-	char *labels;		// Labels for vertices
-	AdjList *array; // An array of adjacency lists
+	int V;
+	char *labels;
+	AdjList *array;
 } Graph;
 
-// Function to create a new adjacency list node
 AdjListNode *newAdjListNode(int dest)
 {
 	AdjListNode *newNode = (AdjListNode *)malloc(sizeof(AdjListNode));
@@ -40,26 +35,79 @@ AdjListNode *newAdjListNode(int dest)
 	return newNode;
 }
 
-// Function to create a new graph
-Graph *createGraph(int V, char *labels)
-{
-	Graph *graph = (Graph *)malloc(sizeof(Graph));
-	graph->V = V;
-	graph->labels = labels;
-	graph->array = (AdjList *)malloc(V * sizeof(AdjList));
-	for (int i = 0; i < V; ++i)
-	{
-		graph->array[i].head = NULL;
-	}
-	return graph;
-}
-
-// Function to add an edge between two vertices
 void addEdge(Graph *graph, int src, int dest)
 {
 	AdjListNode *newNode = newAdjListNode(dest);
 	newNode->next = graph->array[src].head;
 	graph->array[src].head = newNode;
+}
+
+Graph *createGraph(char *fileName)
+{
+	// Open the input file
+	FILE *file = fopen(fileName, "r");
+	if (file == NULL)
+	{
+		printf("Erro ao abrir o arquivo.\n");
+		exit(1);
+	}
+
+	// Read the first line to determine the number of vertices
+	char line[100];
+	fgets(line, sizeof(line), file);
+
+	int V = 0;
+	for (int i = 0; line[i] != '\0'; ++i)
+	{
+		if (line[i] != ' ' && line[i] != '\n' && line[i] != '\r')
+		{
+			++V;
+		}
+	}
+
+	char vertexLabels[V];
+	for (int i = 0, j = 0; line[i] != '\0'; ++i)
+	{
+		if (line[i] != ' ' && line[i] != '\n' && line[i] != '\r')
+		{
+			vertexLabels[j] = line[i];
+			++j;
+		}
+	}
+
+	// Allocate memory for the graph structure
+	Graph *graph = (Graph *)malloc(sizeof(Graph));
+	graph->V = V;
+	graph->labels = (char *)malloc(V * sizeof(char));
+	// ... Initializing adjacency lists ...
+	for (int i = 0; i < V; ++i)
+	{
+		graph->labels[i] = vertexLabels[i];
+	}
+
+	graph->array = (AdjList *)malloc(V * sizeof(AdjList));
+	for (int i = 0; i < V; ++i)
+	{
+		graph->array[i].head = NULL;
+	}
+
+	for (int i = 0; i < V; ++i)
+	{
+		for (int j = 0; j < V; ++j)
+		{
+			int weight;
+			fscanf(file, "%d", &weight);
+
+			// If the weight is 1, add an edge between vertices i and j
+			if (weight == 1)
+			{
+				addEdge(graph, i, j);
+			}
+		}
+	}
+
+	fclose(file);
+	return graph;
 }
 
 // Function to print the adjacency list representation of the graph
@@ -78,66 +126,26 @@ void printGraph(Graph *graph)
 	}
 }
 
-int main()
+int main(int argc, char *argv[])
 {
-	// Open a file named "Adjacency.txt" for reading
-	FILE *file = fopen("Adjacency.txt", "r");
-	if (file == NULL)
+	if (argc != 2)
 	{
-		printf("Error opening the file.\n");
+		printf("Usage: %s <file1>\n", argv[0]);
 		return 1;
 	}
 
-	char line[100];
-	fgets(line, sizeof(line), file); // Read the first line of the file
-	int V = 0;
+	char *file = argv[1];
+	Graph *graph = createGraph(file);
 
-	// Count the number of vertices based on the first line
-	for (int i = 0; line[i] != '\0'; ++i)
-	{
-		if (line[i] != ' ' && line[i] != '\n')
-		{
-			++V;
-		}
-	}
+	printf("Graph:\n");
+	printf("Vertex labels: %s\n", graph->labels);
 
-	char vertexLabels[V];
-
-	// Extract vertex labels from the first line
-	for (int i = 0, j = 0; line[i] != '\0'; ++i)
-	{
-		if (line[i] != ' ' && line[i] != '\n')
-		{
-			vertexLabels[j] = line[i];
-			++j;
-		}
-	}
-
-	// Create a new graph with the specified number of vertices and labels
-	Graph *graph = createGraph(V, vertexLabels);
-
-	// Read the adjacency matrix from the file and add edges to the graph
-	for (int i = 0; i < V; ++i)
-	{
-		for (int j = 0; j < V; ++j)
-		{
-			int weight;
-			fscanf(file, "%d", &weight);
-
-			// If the weight is 1, add an edge between vertices i and j
-			if (weight == 1)
-			{
-				addEdge(graph, i, j);
-			}
-		}
-	}
-
-	// Close the file
-	fclose(file);
-
-	// Print the adjacency list of the graph
-	printf("Adjacency list of the graph:\n");
 	printGraph(graph);
+
+	// Free memory
+	free(graph->labels);
+	free(graph->array);
+	free(graph);
 
 	return 0;
 }
